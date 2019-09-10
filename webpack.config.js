@@ -5,8 +5,8 @@ module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    libraryTarget: 'commonjs2',
-    libraryExport: 'default',
+    libraryTarget: 'commonjs2', // 本地开发调试时注释
+    libraryExport: 'default', // 本地开发调试时注释
     publicPath: '/dist/',
     filename: 'vue-upload-multiple-image.js'
   },
@@ -59,8 +59,8 @@ module.exports = {
 }
 
 if (process.env.NODE_ENV === 'production') {
-  // module.exports.devtool = '#source-map'
-  module.exports.devtool = '#nosources-source-map'
+  // module.exports.devtool = '#source-map'  // 本地开发调试时放开
+  module.exports.devtool = '#nosources-source-map'  // 本地开发调试时注释
   // http://vue-loader.vuejs.org/en/workflow/production.html
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
