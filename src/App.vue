@@ -1,52 +1,92 @@
 <template>
-  <div id="my-strictly-unique-vue-upload-multiple-image" style="display: flex; justify-content: center;">
+  <div
+    id="my-strictly-unique-vue-upload-multiple-image"
+    style="display: flex; justify-content: center;"
+  >
     <vue-upload-multiple-image
       @upload-success="uploadImageSuccess"
       @before-remove="beforeRemove"
       @edit-image="editImage"
-      @data-change="dataChange"
       @limit-exceeded="limitExceeded"
-      ></vue-upload-multiple-image>
+      :data-images="images"
+      :maxImage="maxImage"
+    ></vue-upload-multiple-image>
   </div>
 </template>
 
 <script>
-import VueUploadMultipleImage from './components/VueUploadMultipleImage'
-import axios from 'axios'
+import VueUploadMultipleImage from "./components/VueUploadMultipleImage";
 export default {
-  name: 'app',
-  data () {
+  name: "app",
+  data() {
     return {
-    }
+      images: [],
+      maxImage: 5
+    };
   },
   components: {
     VueUploadMultipleImage
   },
   methods: {
     uploadImageSuccess(formData, index, fileList) {
-      console.log('data', formData, index, fileList)
-      // Upload image api
-      // axios.post('http://gostore.gostore-api.test/api/items/upload', formData).then(response => {
-      //   console.log(response)
-      // })
+      var that = this;
+      var UPLOADFILE = "/api/items/upload"; // 上传文件后台接口路径
+      $.ajax({
+        url: UPLOADFILE,
+        type: "post",
+        data: formData[index],
+        success: function(response) {
+          if (that.images.length === 0) {
+            that.images.push({
+              path: response.data.path, // response.data.path 为服务器保存的文件路径
+              url: response.data.path
+            });
+          } else {
+            that.images.splice(index, 1, {
+              path: response.data.path,
+              url: response.data.path
+            });
+          }
+        }
+      });
     },
-    beforeRemove (index, done, fileList) {
-      console.log('index', index, fileList)
-      var r = confirm("remove image")
+    beforeRemove(index, done, fileList) {
+      var r = confirm("remove image");
       if (r == true) {
-        done()
+        var REMOVEFILE = "/api/file/remove"; // 删除文件后台接口路径
+        var formData = new FormData();
+        formData.append("path", fileList[index].path);
+        $.ajax({
+          url: REMOVEFILE,
+          type: "post",
+          data: formData,
+          success: function(response) {
+            done();
+          }
+        });
       } else {
       }
     },
-    editImage (formData, index, fileList) {
-      console.log('edit data', formData, index, fileList)
+    editImage(formData, index, fileList) {
+      var that = this;
+      var EDITFILE = "/api/file/edit"; // 修改文件后台接口路径
+      formData.append("rawPath", fileList[index].url);
+      $.ajax({
+        url: EDITFILE,
+        type: "post",
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+          that.images.splice(index, 1, {
+            path: response.data.path
+          });
+        }
+      });
     },
-    dataChange (data) {
-      console.log(data)
-    },
-    limitExceeded(amount){
-      console.log(amount)
+    limitExceeded(amount) {
+      console.log("图片数量最大值为" + this.maxImage);
     }
   }
-}
+};
 </script>

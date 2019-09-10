@@ -95,10 +95,10 @@
 </template>
 
 <script>
-import { forEach, findIndex, orderBy, cloneDeep } from 'lodash'
 import Popper from 'vue-popperjs'
 import 'vue-popperjs/dist/css/vue-popper.css'
-import VueImageLightboxCarousel from 'vue-image-lightbox-carousel'
+import VueImageLightboxCarousel from './VueImageLightboxCarousel'
+
 export default {
 
   name: 'VueUploadMultipleImage',
@@ -106,27 +106,27 @@ export default {
   props: {
     dragText: {
       type: String,
-      default: 'Kéo hình ảnh(nhiều)'
+      default: '拖动图片(多个)'
     },
     browseText: {
       type: String,
-      default: '(hoặc) Chọn'
+      default: '(或) 选择'
     },
     primaryText: {
       type: String,
-      default: 'Mặc định'
+      default: '默认'
     },
     markIsPrimaryText: {
       type: String,
-      default: 'Đặt làm mặc định'
+      default: '设为默认值'
     },
     popupText: {
       type: String,
-      default: 'Hình ảnh này sẽ được hiển thị làm mặc định'
+      default: '此图像将显示为默认值'
     },
     dropText: {
       type: String,
-      default: 'Thả tệp của bạn ở đây ...'
+      default: '将文件放在这里......'
     },
     accept: {
       type: String,
@@ -174,7 +174,9 @@ export default {
   },
   computed: {
     imagePreview () {
-      let index = findIndex(this.images, { highlight: 1 })
+      let index = this.images.findIndex(image => {
+        return image.highlight === 1;
+      })
       if (index > -1) {
         return this.images[index].path
       } else {
@@ -199,12 +201,21 @@ export default {
       if(!this.isValidNumberOfImages(files.length)){
         return false
       }
-      forEach(files, (value, index) => {
+      
+      for(var index = 0; index < files.length; index++) {
+        var value = files[index];
         this.createImage(value)
         if (!this.multiple) {
           return false
         }
-      })
+      }
+      
+      // files.forEach((value, index) => {
+      //   this.createImage(value)
+      //   if (!this.multiple) {
+      //     return false
+      //   }
+      // })
       if (document.getElementById(this.idUpload)) {
         document.getElementById(this.idUpload).value = []
       }
@@ -254,9 +265,14 @@ export default {
       if(!this.isValidNumberOfImages(files.length)){
         return false
       }
-      forEach(files, (value, index) => {
+      console.log("uploadFieldChange files", files);
+      for(var index = 0; index < files.length; index++) {
+        var value = files[index];
         this.createImage(value)
-      })
+      }
+      // files.values.forEach((value, index) => {
+      //   this.createImage(value)
+      // })
       if (document.getElementById(this.idUpload)) {
         document.getElementById(this.idUpload).value = []
       }
@@ -269,9 +285,14 @@ export default {
       if(!this.isValidNumberOfImages(files.length)){
         return false
       }
-      forEach(files, (value, index) => {
+      
+      for(var index = 0; index < files.length; index++) {
+        var value = files[index];
         this.editImage(value)
-      })
+      }
+      // files.values.forEach((value, index) => {
+      //   this.editImage(value)
+      // })
       if (document.getElementById(this.idEdit)) {
         document.getElementById(this.idEdit).value = ''
       }
@@ -302,7 +323,9 @@ export default {
         return item
       })
       this.currentIndexImage = 0
-      this.images = orderBy(this.images, 'default', 'desc')
+      this.images.sort((imageA, imageB) => {
+        return (imageB.default || 0) - (imageA.default || 0)
+      })
       this.$emit('mark-is-primary', currentIndex, this.images)
     },
     deleteImage (currentIndex) {
@@ -360,7 +383,7 @@ export default {
   },
   created () {
     this.images = []
-    this.images = cloneDeep(this.dataImages)
+    this.images = JSON.parse(JSON.stringify(this.dataImages))
   }
 }
 </script>
