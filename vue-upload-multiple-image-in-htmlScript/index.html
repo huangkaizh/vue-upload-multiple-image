@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>vue-upload-multiple-image</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+	<div id="app"></div>
+  </div>
+    <script src="./libs/jquery-1.12.4.js"></script>
+	<script src="./libs/vue.js"></script>
+	<script src="./libs/httpVueLoader.js"></script>
+	<script src="./dist/vue-upload-multiple-image.js"></script>
+	<script type="module">
+		Vue.use(httpVueLoader);
+		//var VueUploadMultipleImage = require("./dist/vue-upload-multiple-image.js");
+		//import VueUploadMultipleImage from "./dist/vue-upload-multiple-image.js";
+		//console.log("VueUploadMultipleImage", window.VueUploadMultipleImage);
+		var app = new Vue(
+			{
+			  el: "#app",
+			  name: "app",
+			  template: '<div id="my-strictly-unique-vue-upload-multiple-image" style="display: flex; justify-content: center;">'
+				+ '<vue-upload-multiple-image'
+					  + '@upload-success="uploadImageSuccess"'
+					  + '@before-remove="beforeRemove"'
+					  + '@edit-image="editImage"'
+					  + '@limit-exceeded="limitExceeded"'
+					  + '></vue-upload-multiple-image>'
+				  + '</div>',
+			  data() {
+				return {
+				  images: [],
+				  maxImage: 5
+				};
+			  },
+			  components: {
+				VueUploadMultipleImage
+			  },
+			  methods: {
+				uploadImageSuccess(formData, index, fileList) {
+				  var that = this;
+				  var UPLOADFILE = "/api/items/upload"; // 上传文件后台接口路径
+				  $.ajax({
+					url: UPLOADFILE,
+					type: "post",
+					data: formData[index],
+					success: function(response) {
+					  if (that.images.length === 0) {
+						that.images.push({
+						  path: response.data.path, // response.data.path 为服务器保存的文件路径
+						  url: response.data.path
+						});
+					  } else {
+						that.images.splice(index, 1, {
+						  path: response.data.path,
+						  url: response.data.path
+						});
+					  }
+					}
+				  });
+				},
+				beforeRemove(index, done, fileList) {
+				  var r = confirm("remove image");
+				  if (r == true) {
+					var REMOVEFILE = "/api/file/remove"; // 删除文件后台接口路径
+					var formData = new FormData();
+					formData.append("path", fileList[index].path);
+					$.ajax({
+					  url: REMOVEFILE,
+					  type: "post",
+					  data: formData,
+					  success: function(response) {
+						done();
+					  }
+					});
+				  } else {
+				  }
+				},
+				editImage(formData, index, fileList) {
+				  var that = this;
+				  var EDITFILE = "/api/file/edit"; // 修改文件后台接口路径
+				  formData.append("rawPath", fileList[index].url);
+				  $.ajax({
+					url: EDITFILE,
+					type: "post",
+					data: formData,
+					contentType: false,
+					processData: false,
+					success: function(response) {
+					  that.images.splice(index, 1, {
+						path: response.data.path
+					  });
+					}
+				  });
+				},
+				limitExceeded(amount) {
+				  console.log("图片数量最大值为" + this.maxImage);
+				}
+			  }
+			}
+		);
+	</script>
+  </body>
+</html>
