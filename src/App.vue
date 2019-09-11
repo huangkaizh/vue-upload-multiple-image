@@ -34,7 +34,9 @@ export default {
       $.ajax({
         url: UPLOADFILE,
         type: "post",
-        data: formData[index],
+        data: formData,
+        contentType: false,
+        processData: false,
         success: function(response) {
           if (that.images.length === 0) {
             that.images.push({
@@ -60,6 +62,8 @@ export default {
           url: REMOVEFILE,
           type: "post",
           data: formData,
+          contentType: false,
+          processData: false,
           success: function(response) {
             done();
           }
